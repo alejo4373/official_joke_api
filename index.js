@@ -1,10 +1,10 @@
 const express = require('express');
-const LimitingMiddleware = require('limiting-middleware');
-const { randomJoke, randomTen, jokeByType } = require('./handler');
+const morgan = require('morgan');
+const { randomJoke, randomTen, jokeByType, randomNJokes } = require('./handler');
 
 const app = express();
 
-app.use(new LimitingMiddleware().limitByIp());
+app.use(morgan('dev'));
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
@@ -35,6 +35,15 @@ app.get('/jokes/ten', (req, res) => {
   res.json(randomTen());
 });
 
+app.get('/jokes/random/:n', (req, res, next) => {
+  let number = Number(req.params.n)
+  if(!isNaN(number)) {
+    res.json(randomNJokes(number));
+  } else  {
+    next(new Error(`/${req.params.n} endpoint should be a number`))
+  }
+});
+
 app.get('/jokes/:type/random', (req, res) => {
   res.json(jokeByType(req.params.type, 1));
 });
@@ -51,5 +60,5 @@ app.use((err, req, res, next) => {
   });
 });
 
-const PORT = process.env.PORT || 3005;
+const PORT = process.env.PORT || 3100;
 app.listen(PORT, () => console.log(`listening on ${PORT}`));
